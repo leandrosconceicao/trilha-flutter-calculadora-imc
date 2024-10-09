@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Imc {
+  int? id;
   double _peso;
   double _altura;
 
   Imc({
+    this.id,
     required double peso,
     required double altura
   }) : _peso = peso, _altura = altura;
@@ -21,5 +23,8 @@ class Imc {
   double get peso => _peso;
   double get altura => _altura;
 
-  double get getImc => double.parse((_peso / (_altura * _altura)).toStringAsFixed(2));
+  String get getPeso => _peso.toStringAsFixed(2).replaceAll('.', ',');
+  String get getAltura => _altura.toStringAsFixed(2).replaceAll('.', ',');
+
+  String get getImc => double.parse((_peso / (_altura * _altura)).toStringAsFixed(2)).toString().replaceAll('.', ',');
 }
