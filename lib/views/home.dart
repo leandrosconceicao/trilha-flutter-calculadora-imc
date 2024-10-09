@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/imc.dart';
+import '../repository/repository.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,7 +13,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final registros = ValueNotifier<List<Imc>>([]);
+  late final AppRepository repository;
+  final registros = StreamController<List<Imc>>.broadcast();
+
+  @override
+  void initState() {
+    repository = AppRepository();
+    loadData();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    repository.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +36,13 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Registrador de IMC"),
         centerTitle: true,
       ),
-      body: ValueListenableBuilder(
-        valueListenable: registros,
-        builder: (ctx, value, __) {
+      body: StreamBuilder(
+        stream: registros.stream,
+        builder: (ctx, snap) {
+          if (!snap.hasData) {
+            return const Center(child: CircularProgressIndicator(),);
+          }
+          final value = snap.data ?? [];
           if (value.isEmpty) {
             return const Center(
               child: Text(
@@ -41,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                     leading: Text("${i + 1}"),
                     title: Text("IMC Registrado: ${imc.getImc}"),
                     subtitle: Text(
-                        "Peso informado - ${imc.peso}, altura informada - ${imc.altura}"),
+                        "Peso informado - ${imc.getPeso}, altura informada - ${imc.getAltura}"),
                   );
                 },
               ),
@@ -122,7 +142,15 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
+  void loadData() {
+    final data = repository.findAll();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      registros.add(data);
+    });
+  }
+
   void addRegistro(Imc imc) {
-    registros.value += [imc];
+    repository.addData(imc);
+    loadData();
   }
 }
